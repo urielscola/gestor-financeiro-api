@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>
+		
+	</title>
+	<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+	<script type="text/javascript">
+		data = axios.get('http://localhost:3003/api/cycles')
+			.then(function(data) {
+				const info = data.data[0]
+				document.querySelector('body').innerHTML = info.name;
+			})
+	</script>
+</body>
+</html>

@@ -6,14 +6,15 @@ const cycleSchema = new mongoose.Schema({
 	year: String,
 	credits: [
 		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Credit"
+			name: String,
+			value: Number
 		}
 	],
 	debits: [
 		{
-			type: mongoose.Schema.Types.ObjectId,
-			ref: "Debit"
+			name: String,
+			value: Number,
+			status: String
 		}
 	]
 });
