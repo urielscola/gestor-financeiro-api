@@ -39,30 +39,9 @@ module.exports = function(server) {
 			name: req.body.name,
 			month: req.body.month,
 			year: req.body.year,
-			credits: [
-				{
-					name: 'Salário',
-					value: 3400
-				},
-				{
-					name: 'Freela',
-					value: 1000
-				}
-			], //inserir eventuais dados aqui
-			debits: [
-				{
-					name: 'Van',
-					value: 540,
-					status: 'Pendente'
-				},
-				{
-					name: 'Renner',
-					value: 120,
-					status: 'Pendente'
-				}
-			] //inserir eventuais dados aqui
+			credits: req.body.credits, 
+			debits: req.body.debits
 		}
-
 
 		Cycle.create(cycle, function(err, newCycle) {
 			if (err) {
@@ -75,11 +54,18 @@ module.exports = function(server) {
 						res.status(400).send(err);
 
 					} else {
-						res.json(newlyCycle);
+						//res.json(newlyCycle);
+						Cycle.find({}, function(err, cycles) {
+							if (err) {
+								console.log(err);
+							} else { 
+								res.json(cycles);
+							}
+						});
 					}
 				});
 			}
-		})
+		});
 	});
 
 
@@ -90,7 +76,14 @@ module.exports = function(server) {
 			if (err) {
 				res.status(400).send("Error removing cycle");
 			} else {
-				res.status(200).send("OK");
+				//res.status(200).send("OK");
+				Cycle.find({}, function(err, cycles) {
+					if (err) {
+						console.log(err);
+					} else { 
+						res.json(cycles);
+					}
+				});
 		  }
 		});
 	});
