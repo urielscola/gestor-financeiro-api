@@ -91,13 +91,28 @@ module.exports = function(server) {
 
 	// UPDATE CYCLE
 	ROUTER.put('/cycles/:id', function(req, res) {
-		var newCycle = {}; //receber objeto cycle e atualizar
+		//var newCycle = {}; //receber objeto cycle e atualizar
+
+		const newCycle = {
+			name: req.body.name,
+			month: req.body.month,
+			year: req.body.year,
+			credits: req.body.credits, 
+			debits: req.body.debits
+		}
 
 		Cycle.findByIdAndUpdate(req.params.id, { $set: newCycle }, function(err, updatedCycle) {
 			if (err) {
 				res.status(400).send("Error updating cycle.");
 			} else {
-				res.json(updatedCycle);
+				//res.json(updatedCycle);
+				Cycle.find({}, function(err, cycles) {
+					if (err) {
+						console.log(err);
+					} else { 
+						res.json(cycles);
+					}
+				});
 			}
 		});
 	});
