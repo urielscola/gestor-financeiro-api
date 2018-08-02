@@ -4,4 +4,4 @@ const leftOverSchema = new mongoose.Schema({
 	value: Number
 });
 
-module.exports = mongoose.model("Leftover", leftOverSchema);
+module.exports = mongoose.model("leftover", leftOverSchema);
