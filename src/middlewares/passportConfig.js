@@ -17,13 +17,14 @@ module.exports = function(passport) {
   
       User.findOne({ email: email }, function(err, user) {
           if (err) { return done(err); }
-          if (!user) { console.log("Aqui"); return done(null, false, { message: 'E-mail inválido.' } ); }
+          if (!user) { return done(null, false, { message: 'E-mail inválido.' } ); }
   
           // Compara as senhas, se a senha informada pelo usuário for igual à que está no banco, após o unencrypt, retorna o user, se não, false
           user.comparePassword(password, function(err, isMatch) {
               if (err) { return done(err); }
               if (!isMatch) { return done(null, false); }
   
+              user.password = undefined;
               return done(null, user);
           });
       });
@@ -42,17 +43,24 @@ module.exports = function(passport) {
   // Instância do JWT strategy
   const jwtLogin = new JwtStrategy(jwtOptions, function(payload, done) {
   
+    const isTokenExpired = (payload.exp - (new Date().getTime()/1000)) < 0;
+
+    if (isTokenExpired) {
+      return done(null, false);
+    }
+
     /* 
     ** Procura o usuário pelo ID no banco
     ** Se existir, passa para o done() o usuário e um null no erro 
     ** Se não existir, passa para o done() null para o erro e false para o usuário 
     */
-  
+
     User.findById(payload.sub, function(err, user) {
   
       if (err) { return done(err, false); }
   
       if (user) {
+        user.password = undefined;
         done(null, user);
       } else {
         done(null, false);
@@ -62,5 +70,6 @@ module.exports = function(passport) {
   
   passport.use(jwtLogin);
   passport.use(localLogin);
+  
 };
 

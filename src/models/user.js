@@ -5,15 +5,31 @@ const Schema = mongoose.Schema;
 
 const UserSchema = new Schema(
     {
-        username: String,
+        username: {
+            type: String,
+            required: [true, 'Username é necessário'],
+            validate: {
+                validator: (username) => username.length > 2,
+                message: 'Username deve ter pelo menos 3 caracteres.'
+            }
+        },
         email: { 
             type: String, 
-            unique: true,
-            lowercase: true
+            validate: {
+                validator: (email) => new RegExp(/\S+@\S+\.\S+/).test(email),
+                message: 'E-mail inválido.'
+            },
+            unique: [true, 'E-mail já está em uso.'],
+            lowercase: true,
+            required: [true, 'E-mail é necessário.']
         },
         password: {
             type: String,
-            required: true
+            required: [true, 'Senha é necessário.'],
+            validate: {
+                validator: (pass) => pass.length > 5,
+                message: 'Senha deve ter pelo menos 6 caracteres.'
+            }
         },	
         cycles: [
             {
@@ -21,7 +37,26 @@ const UserSchema = new Schema(
                 ref: 'cycle'
             }
         ],
-        tags: [String]
+        leftovers: [
+            {
+                value: {
+                    type: Number,
+                    min: [0, 'O valor do saldo não pode ser R$ 0,00.']
+                }
+            }
+        ],
+        tags: [
+            {
+                name: {
+                    type: String,
+                    lowercase: true,
+                    validate: {
+                        validator: (tag) => tag.length > 2,
+                        message: 'O nome da tag deve ter pelo menos 3 caracteres.'
+                    }
+                }
+            }
+        ]
     },
 	{
 		toObject: { virtuals: true },

@@ -1,108 +1,113 @@
 const router = require('express').Router();
 const Cycle = require('../models/cycle');
+const User = require('../models/user');
 
+const requireAuth = require('../middlewares/passportMiddlewares').requireAuth;
 
-	// ALL CYCLES
-	router.get('/', function(req, res) {
-		Cycle.find({}, function(err, cycles) {
-            if (err) {
-                console.log(err);
-            } else { 
-                res.json(cycles);
-            }
+	router.get('/', requireAuth, function(req, res) {
+
+		/*
+		* Retorna todos os ciclos de determinado usuário a partir de seu ID
+		*/
+
+		Cycle.find({ userId: req.user.id }, function(err, cycles) {
+			if (err) { return console.log(err); } 
+			
+            res.status(200).json({ cycles: cycles });
         });
 	});
 
-	//SINGLE CYCLE
-	router.get("/:id", function(req, res) {
+
+	router.get("/:id", requireAuth, function(req, res) {
+
+		/*
+		* Retorna um ciclo a partir de seu ID
+		*/
+
 		Cycle.findById(req.params.id, function(err, foundCycle) {
-			if (err) {
-				res.status(404).send('Error.');
-			} else {
-				res.json(foundCycle);
-			}
+			if (err) { return res.status(404).send(err); } 
+
+			res.json(foundCycle);
 		});
 	});
 
-	//NEW CYCLE
-	router.post('/', function(req, res) {
 
-		const cycle = {
+	router.post('/', requireAuth, function(req, res) {
+
+		//FIXME: VALIDAR INPUT
+
+		/*
+		* Criando novo objeto de Cycle a partir dos parâmetros recebidos e validados
+		*/
+
+		const cycle = new Cycle({ 
 			name: req.body.name,
 			month: req.body.month,
+			userId: req.user.id,
 			year: req.body.year,
-			credits: req.body.credits, 
-			debits: req.body.debits
-		}
+			credits: req.body.credits || [], 
+			debits: req.body.debits || [] 
+		});
 
-		Cycle.create(cycle, function(err, newCycle) {
-			if (err) {
-				console.log(err);
-			} else {
+		/*
+		* - Salvar ciclo
+		* - Inserir o ID do novo ciclo como referência no array de ciclos do usuário
+		*/
 
-				newCycle.save(function(err, newlyCycle) {
-					if (err) {
-						console.log(err);
-						res.status(400).send(err);
+		cycle.save(function(err, newCycle) {
+			if (err) { return res.status(400).send(err); } 
 
-					} else {
-						//res.json(newlyCycle);
-						console.log(JSON.stringify(newlyCycle));
-						Cycle.find({}, function(err, cycles) {
-							if (err) {
-								console.log(err);
-							} else { 
-								res.json(cycles);
-							}
-						});
-					}
+			User.findById(newCycle.userId, function(err, user) {
+				if (err) { return res.status(400).send(err) }
+
+				user.cycles.push(newCycle.id);
+				user.save(function(err) {
+					if (err) { return res.status(400).send(err) }
+					
+					res.status(201).json(newCycle);
 				});
-			}
+			});
 		});
 	});
 
-	// DELETE CYCLE
-	router.delete('/:id', function(req, res) {
-		Cycle.findByIdAndRemove(req.params.id, function(err) {
-			if (err) {
-				res.status(400).send("Error removing cycle");
-			} else {
-				//res.status(200).send("OK");
-				Cycle.find({}, function(err, cycles) {
-					if (err) {
-						console.log(err);
-					} else { 
-						res.json(cycles);
-					}
-				});
-		    }
+
+	router.delete('/:id', requireAuth, function(req, res) {
+
+		//FIXME: VALIDAR INPUT
+
+		/*
+		* - Remove um ciclo por ID
+		*/
+
+		Cycle.findById(req.params.id, function(err, cycle) {
+			if (err) { return res.status(400).send(err); }
+
+			cycle.remove(function(err) {	
+				if (err) { return res.status(400).send(err); }
+				res.status(200).send({ sucesss: true });
+			});
+
 		});
 	});
 
-	// UPDATE CYCLE
-	router.put('/:id', function(req, res) {
 
+	router.put('/:id', requireAuth, function(req, res) {
+
+		//FIXME: VALIDAR INPUT
+		
 		const newCycle = {
 			name: req.body.name,
 			month: req.body.month,
 			year: req.body.year,
 			credits: req.body.credits, 
-			debits: req.body.debits
+			debits: req.body.debits,
+			userId: req.user.id
 		}
 
 		Cycle.findByIdAndUpdate(req.params.id, { $set: newCycle }, function(err, updatedCycle) {
-			if (err) {
-				res.status(400).send("Error updating cycle.");
-			} else {
-				//res.json(updatedCycle);
-				Cycle.find({}, function(err, cycles) {
-					if (err) {
-						console.log(err);
-					} else { 
-						res.json(cycles);
-					}
-				});
-			}
+			if (err) { return res.status(400).send(err);} 
+			console.log("?")
+			res.status(200).json(updatedCycle);
 		});
 	});
 
